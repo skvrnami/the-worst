@@ -1,0 +1,252 @@
+<html>
+<head>
+    <title>The Worst Thing Ever to Happen to Music</title>
+    <link rel="stylesheet" type="text/css" href="morbid.css">
+    <link href="https://fonts.googleapis.com/css?family=Fira+Sans&display=swap" rel="stylesheet"> 
+    <script src=papaparse.min.js></script> 
+    <script>
+    
+    function getRandomSubarray(arr, size) {
+        var shuffled = arr.slice(0), i = arr.length, temp, index;
+        while (i--) {
+            index = Math.floor((i + 1) * Math.random());
+            temp = shuffled[index][1];
+            shuffled[index] = shuffled[i];
+            shuffled[i] = temp;
+        }
+        return shuffled.slice(0, size);
+    };
+
+    function removePreviousList() {
+        var elem = document.getElementsByTagName("ul");
+        if(elem.length > 0){
+            elem[0].parentNode.removeChild(elem[0])
+        }
+    };
+
+    function appendPlaylist(arr, playlistId){
+        removePreviousList();
+
+        var ul = document.createElement("ul");
+        document.getElementById(playlistId).appendChild(ul)
+
+        for (i = 0; i < arr.length; i++) {
+            var node = document.createElement("li");
+            
+            //var textnode = document.createTextNode(arr[i]);
+            //node.appendChild(textnode);
+            //document.getElementsByTagName("ul")[0].appendChild(node);
+
+            var a = document.createElement('a');
+            var linkText = document.createTextNode(arr[i]);
+            a.appendChild(linkText);
+            a.title = arr[i];
+            a.href = "https://www.youtube.com/results?search_query=" + arr[i].replace(/&/g, "");
+            a.target = "_blank";
+            document.getElementsByTagName("ul")[0].appendChild(node).appendChild(a);
+
+        };
+    };
+
+    function generatePlaylist() {
+
+        Papa.parse("sample-data-dead.csv", {
+        download: true,
+        complete: function(results, file) {
+
+            var n = parseInt(document.getElementById("tracks").value)
+            var stations = [];
+            var genres = [];
+            if(document.getElementById("RZ").checked){
+                stations.push("radiozurnal")
+            }
+
+            if(document.getElementById("DJ").checked){
+                stations.push("dvojka")
+            }
+
+            if(document.getElementById("RW").checked){
+                stations.push("radiowave")
+            }
+
+            if(document.getElementById("JAZZ").checked){
+                stations.push("jazz")
+            }
+
+            if(document.getElementById("JUNIOR").checked){
+                stations.push("radiojunior")
+            }
+
+            if(document.getElementById("REGION").checked){
+                stations.push("region")
+            }
+
+            if(document.getElementById("pop").checked){
+                genres.push("pop")
+            }
+
+            if(document.getElementById("rock").checked){
+                genres.push("rock")
+            }
+
+            if(document.getElementById("electro").checked){
+                genres.push("electronic")
+            }
+
+            if(document.getElementById("jazz").checked){
+                genres.push("jazz")
+            }
+
+            if(document.getElementById("hiphop").checked){
+                genres.push("hip-hop")
+            }
+
+            if(document.getElementById("core").checked){
+                genres.push("*core")
+            }
+
+            if(document.getElementById("hiphop").checked){
+                genres.push("hip-hop")
+            }
+
+            if(document.getElementById("classic").checked){
+                genres.push("classical")
+            }
+
+            var dead;
+            if (document.getElementById("dead0").checked) {
+                dead = parseInt(document.getElementById("dead0").value);
+            }
+
+            if (document.getElementById("dead1").checked) {
+                dead = parseInt(document.getElementById("dead1").value);
+            }
+
+            if (document.getElementById("dead2").checked) {
+                dead = parseInt(document.getElementById("dead2").value);
+            }
+
+            var filteredData = results["data"].filter(function(x) {return stations.indexOf(x[0]) >= 0})
+            if(genres.length != 8){
+                var data = filteredData.filter(function(x) {return genres.indexOf(x[2]) >= 0})
+            }else{
+                var data = filteredData.slice();
+            }
+            
+            if(dead != 2){
+                data = data.filter(function(x) {return x[3] == dead})
+            }
+
+            var playlist = getRandomSubarray(data, n);
+
+            appendPlaylist(playlist, "playlist");
+            
+        }})
+    };
+    </script>
+</head>
+<body>
+    <div class="content">
+        <div class="box">
+        <h1>☠️ The Worst Thing Ever to Happen to Music ☠️</h1>
+        <p>Vygeneruj si náhodný playlist ze skladeb, které zazněly ve vysílání stanic Českého rozhlasu mezi&nbsp;1.&nbsp;lednem a 1. zářím 2019. Aspoň podle dat dostupných <a href="https://data.irozhlas.cz/opendata/">tady</a>.</p>
+        <p><i>"The worst thing ever to happen to music"</i> je jedno z označení žánru, který podle <a href="https://www.last.fm/">last.fm</a> provozuje Helena Vondráčková. A generování náhodných playlistů ze skladeb hraných na stanicích ČRo asi taky není nejlepší nápad. Ale co už. </p>
+        </div>
+        <div class="box">
+                <p>
+                <b>Zvol počet skladeb:</b><br>
+                <input type="number" value="8" id="tracks"><br>
+                </p>
+                <p>
+                <b>Zvol stanice:</b><br>
+                    <table>
+                        <tr>
+                            <td>
+                            <input type="checkbox" id="RZ" value="radiozurnal">Radiožurnál
+                            </td>
+                            <td>
+                            <input type="checkbox" id="DJ" value="dvojka">Dvojka
+                            </td>
+                            <td> 
+                            <input type="checkbox" id="RW" value="radiowave" checked>Radio Wave
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                            <input type="checkbox" id="JAZZ" value="jazz">Jazz
+                            </td>
+                            <td>
+                            <input type="checkbox" id="JUNIOR" value="radiojunior">Junior
+                            </td>
+                            <td>
+                            <input type="checkbox" id="REGION" value="region">Regionální stanice
+                            </td>
+                        </tr>
+                    </table>
+                </p>
+                <p>
+                <b>Zvol žánr:</b><br>
+                <span class="note">Podle dat z <a href="https://www.last.fm/">last.fm</a></span>
+                    <table>
+                        <tr>
+                            <td>
+                            <input type="checkbox" id="pop" value="pop" checked>pop
+                            </td>
+                            <td>
+                            <input type="checkbox" id="rock" value="rock" checked>rock
+                            </td>
+                            <td> 
+                            <input type="checkbox" id="electro" value="electronic" checked>electro
+                            </td>
+                            <td> 
+                            <input type="checkbox" id="jazz" value="jazz" checked>jazz
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                            <input type="checkbox" id="hiphop" value="hip-hop" checked>hip-hop
+                            </td>
+                            <td>
+                            <input type="checkbox" id="classic" value="classical" checked>classical
+                            </td>
+                            <td>
+                            <input type="checkbox" id="core" value="*core" checked>*core
+                            </td>
+                            <td> 
+                            <input type="checkbox" id="other" value="other" checked>ostatní/neznámý
+                            </td>
+                        </tr>
+                    </table>
+                </p>
+                <p>
+                <b>Mají být interpreti:</b><br>
+                <span class="note">Podle dat z <a href="https://cs.wikipedia.org/wiki/Hlavn%C3%AD_strana">Wikipedie</a> (aktuální k září 2019), nefunguje pro vícečlenná uskupení</span>
+                <table>
+                    <tr>
+                    <td>
+                    <input type="radio" id="dead0" name="dead" value="0"> Mrtví
+                    </td>
+                    <td>
+                    <input type="radio" id="dead1" name="dead" value="1"> Živí
+                    </td>
+                    <td>
+                    <input type="radio" id="dead2" name="dead" value="2" checked> To je jedno
+                    </td>
+                    </tr>
+                </table>
+                </p>
+
+                <button onclick="generatePlaylist();">Vygeneruj playlist</button>
+        </div>
+        <div class="box" id="playlist">
+        </div>
+        <div class="box" id="footer">
+        <p>
+        <a href="/">nemorbidní verze</a><br>
+        vytvořeno <a href="https://twitter.com/skvrnami/">@skvrnami</a> na <a href="https://hackujstat.cz/">#hackujstat</a></p>
+    </div>
+    </div>
+    
+</body>
+
+</html>

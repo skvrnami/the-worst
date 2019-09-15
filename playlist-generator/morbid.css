@@ -1,0 +1,70 @@
+body {
+    background-color: black;
+    color: white;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 80%;
+}
+
+
+
+.box {
+    text-align: left;
+    width: 50%;
+}
+
+body {
+    font-family: "Fira Sans", sans-serif;
+}
+
+ul {
+   list-style: none;
+}
+
+li {
+    padding-bottom: 4px;
+}
+
+a:link {
+  color: white;
+}
+
+a:visited {
+  color: white;
+}
+
+a:hover {
+  color: yellow;
+}
+
+h1 {
+    text-align: center;
+}
+
+td {
+    width: 200px;
+}
+
+.note {
+    margin-top: 2px;
+    font-size: 14px;
+    color: gray;
+}
+
+/*
+#playlist {
+    height: 75%;
+}
+*/
+
+#footer {
+    text-align: center;
+    margin-top: auto;
+    width: 30%;
+    font-size: 14px;
+    color: gray;
+}
