@@ -5,11 +5,16 @@
     height: 80%;
 }
 
-
-
 .box {
     text-align: left;
+    vertical-align: middle;
+    display:inline-block;
     width: 50%;
+}
+
+.no-data {
+  padding-top: 30px;
+  color: gray;
 }
 
 body {

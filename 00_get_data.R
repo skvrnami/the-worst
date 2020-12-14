@@ -1,6 +1,21 @@
 library(dplyr)
 library(RSQLite)
 
+args <- commandArgs(trailingOnly=TRUE)
+
+START_DATE <- "2020-11-29" #args[1] #"2019-09-02"
+END_DATE <- "2020-12-10" #args[2] #"2019-12-31"
+
+CREATE_PLAYLIST_SQL <- "create table if not exists playlist (station_id text, date text, id int, interpret_id int, track_id int, unique (station_id, date, id, interpret_id, track_id))"
+CREATE_INTERPRET_SQL <- "create table if not exists interprets (interpret_id int, interpret text, unique (interpret_id, interpret))"
+CREATE_TRACK_SQL <- "create table if not exists tracks (track_id int, track text, unique (track_id, track))"
+
+con <- dbConnect(SQLite(), "data_2020.sqlite")
+dbClearResult(dbSendStatement(con, CREATE_INTERPRET_SQL))
+dbClearResult(dbSendStatement(con, CREATE_TRACK_SQL))
+dbClearResult(dbSendStatement(con, CREATE_PLAYLIST_SQL))
+
+
 get_playlist <- function(date, station = "radiowave"){
     
     ALLOWED_STATIONS <- c(
@@ -45,16 +60,6 @@ get_playlist <- function(date, station = "radiowave"){
     jsonlite::fromJSON(stringr::str_conv(out$content, "UTF-8"))$data
 }
 
-CREATE_PLAYLIST_SQL <- "create table if not exists playlist (station_id text, date text, id int, interpret_id int, track_id int)"
-CREATE_INTERPRET_SQL <- "create table if not exists interprets (interpret_id int, interpret text)"
-CREATE_TRACK_SQL <- "create table if not exists tracks (track_id int, track text)"
-
-con <- dbConnect(SQLite(), "data.sqlite")
-dbClearResult(dbSendStatement(con, CREATE_INTERPRET_SQL))
-dbClearResult(dbSendStatement(con, CREATE_TRACK_SQL))
-dbClearResult(dbSendStatement(con, CREATE_PLAYLIST_SQL))
-
-
 insert_interprets_to_db <- function(connection, interprets){
     r <- dbSendStatement(connection, 
                     paste0("insert into interprets values ", 
@@ -89,12 +94,14 @@ send_data_to_db <- function(connection, station, data){
     EXISTING_INTERPRETS <- dbGetQuery(con, "select * from interprets")
     
     NEW_INTERPRETS <- data %>% select(interpret_id, interpret) %>%
-        filter(!interpret_id %in% EXISTING_INTERPRETS$interpret_id)
+        filter(!interpret_id %in% EXISTING_INTERPRETS$interpret_id) %>%
+        unique
     
     EXISTING_TRACKS <- dbGetQuery(con, "select * from tracks")
     
     NEW_TRACKS <- data %>% select(track_id, track) %>%
-        filter(!track_id %in% EXISTING_TRACKS$track_id)
+        filter(!track_id %in% EXISTING_TRACKS$track_id) %>%
+        unique
     
     if(nrow(NEW_INTERPRETS) > 0){
         insert_interprets_to_db(connection, NEW_INTERPRETS)    
@@ -107,9 +114,8 @@ send_data_to_db <- function(connection, station, data){
     insert_playlist_to_db(connection, station, data)
 }
 
-DATES <- as.character(seq.Date(as.Date("2019-01-01"), 
-                  as.Date("2019-09-01"), 
-                  by = 1))
+DATES <- seq(as.Date(START_DATE), as.Date(END_DATE), by = 1) %>%
+    as.character()
 
 get_station_data <- function(connection, dates, station){
     for(i in dates){
@@ -135,24 +141,3 @@ get_station_data(con, DATES, "regina")
 get_station_data(con, DATES, "strednicechy")
 get_station_data(con, DATES, "sever")
 get_station_data(con, DATES, "vysocina")
-
-r <- dbSendStatement(con, "create table if not exists last_fm_interprets (interpret_id int, interpret text, global_listeners int, global_scrobbles int, tags text)")
-dbClearResult(r)
-
-library(lastfmR)
-for(i in 1:nrow(interprets)){
-    cat(interprets$interpret[i], "\n")
-    last_fm_data <- get_artist_info(artist_vector = c(interprets$interpret[i]))
-    if(nrow(last_fm_data) > 0 & !is.na(last_fm_data$global_listeners)){
-        dbSendStatement(con, paste0("insert into last_fm_interprets values (", 
-                                    interprets$interpret_id[i], ", '",
-                                    gsub("'", "`", interprets$interpret[i]), "', ", 
-                                    last_fm_data$global_listeners, ", ", 
-                                    last_fm_data$global_scrobbles, ", '", 
-                                    gsub("'", "", last_fm_data$artist_tags), "')"
-        )) -> o
-        dbClearResult(o)
-    }
-}
-
-

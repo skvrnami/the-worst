@@ -3,54 +3,13 @@
     <title>The Worst Thing Ever to Happen to Music</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <link href="https://fonts.googleapis.com/css?family=Fira+Sans&display=swap" rel="stylesheet"> 
-    <script src=papaparse.min.js></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.2.0/papaparse.min.js"></script> 
+    <script src="playlist.js"></script>
     <script>
     
-    function getRandomSubarray(arr, size) {
-        var shuffled = arr.slice(0), i = arr.length, temp, index;
-        while (i--) {
-            index = Math.floor((i + 1) * Math.random());
-            temp = shuffled[index][1];
-            shuffled[index] = shuffled[i];
-            shuffled[i] = temp;
-        }
-        return shuffled.slice(0, size);
-    };
-
-    function removePreviousList() {
-        var elem = document.getElementsByTagName("ul");
-        if(elem.length > 0){
-            elem[0].parentNode.removeChild(elem[0])
-        }
-    };
-
-    function appendPlaylist(arr, playlistId){
-        removePreviousList();
-
-        var ul = document.createElement("ul");
-        document.getElementById(playlistId).appendChild(ul)
-
-        for (i = 0; i < arr.length; i++) {
-            var node = document.createElement("li");
-            
-            //var textnode = document.createTextNode(arr[i]);
-            //node.appendChild(textnode);
-            //document.getElementsByTagName("ul")[0].appendChild(node);
-
-            var a = document.createElement('a');
-            var linkText = document.createTextNode(arr[i]);
-            a.appendChild(linkText);
-            a.title = arr[i];
-            a.href = "https://www.youtube.com/results?search_query=" + arr[i].replace(/&/g, "");
-            a.target = "_blank";
-            document.getElementsByTagName("ul")[0].appendChild(node).appendChild(a);
-
-        };
-    };
-
     function generatePlaylist() {
 
-        Papa.parse("sample-data-min3.csv", {
+        Papa.parse("sample-data.csv", {
         download: true,
         complete: function(results, file) {
 
@@ -129,7 +88,7 @@
     <div class="content">
         <div class="box">
         <h1>The Worst Thing Ever to Happen to Music</h1>
-        <p>Vygeneruj si náhodný playlist ze skladeb, které zazněly ve vysílání stanic Českého rozhlasu mezi&nbsp;1.&nbsp;lednem a 1. zářím 2019. Aspoň podle dat dostupných <a href="https://data.irozhlas.cz/opendata/">tady</a>.</p>
+        <p>Vygeneruj si náhodný playlist ze skladeb, které zazněly ve vysílání stanic Českého rozhlasu od&nbsp;29.&nbsp;listopadu 2020. Aspoň podle dat dostupných <a href="https://data.irozhlas.cz/opendata/">tady</a>.</p>
         <p><i>"The worst thing ever to happen to music"</i> je jedno z označení žánru, který podle <a href="https://www.last.fm/">last.fm</a> provozuje Helena Vondráčková. A generování náhodných playlistů ze skladeb hraných na stanicích ČRo asi taky není nejlepší nápad. Ale co už. </p>
         </div>
         <div class="box">
@@ -142,31 +101,31 @@
                     <table>
                         <tr>
                             <td>
-                            <input type="checkbox" id="RZ" value="radiozurnal">Radiožurnál
+                            <input type="checkbox" id="RZ" value="RZ">Radiožurnál
                             </td>
                             <td>
-                            <input type="checkbox" id="DJ" value="dvojka">Dvojka
+                            <input type="checkbox" id="DJ" value="DJ">Dvojka
                             </td>
                             <td> 
-                            <input type="checkbox" id="RW" value="radiowave" checked>Radio Wave
+                            <input type="checkbox" id="RW" value="RW" checked>Radio Wave
                             </td>
                         </tr>
                         <tr>
                             <td>
-                            <input type="checkbox" id="JAZZ" value="jazz">Jazz
+                            <input type="checkbox" id="JAZZ" value="JZ">Jazz
                             </td>
                             <td>
-                            <input type="checkbox" id="JUNIOR" value="radiojunior">Junior
+                            <input type="checkbox" id="JUNIOR" value="RJ">Junior
                             </td>
                             <td>
-                            <input type="checkbox" id="REGION" value="region">Regionální stanice
+                            <input type="checkbox" id="REGION" value="RG">Regionální stanice
                             </td>
                         </tr>
                     </table>
                 </p>
                 <p>
                 <b>Zvol žánr:</b><br>
-                <span class="note">Podle dat z <a href="https://www.last.fm/">last.fm</a></span>
+                <span class="note">Podle dat ze Spotify</a></span>
                     <table>
                         <tr>
                             <td>

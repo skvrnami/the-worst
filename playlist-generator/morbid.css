@@ -49,6 +49,11 @@ td {
     width: 200px;
 }
 
+img {
+    vertical-align: middle;
+    padding-left: 5px;
+}
+
 .note {
     margin-top: 2px;
     font-size: 14px;
