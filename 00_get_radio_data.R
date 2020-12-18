@@ -3,8 +3,8 @@ library(RSQLite)
 
 args <- commandArgs(trailingOnly=TRUE)
 
-START_DATE <- "2020-11-29" #args[1] #"2019-09-02"
-END_DATE <- "2020-12-10" #args[2] #"2019-12-31"
+START_DATE <- args[1] #"2019-09-02"
+END_DATE <- args[2] #"2019-12-31"
 
 CREATE_PLAYLIST_SQL <- "create table if not exists playlist (station_id text, date text, id int, interpret_id int, track_id int, unique (station_id, date, id, interpret_id, track_id))"
 CREATE_INTERPRET_SQL <- "create table if not exists interprets (interpret_id int, interpret text, unique (interpret_id, interpret))"

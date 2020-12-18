@@ -29,6 +29,8 @@ spotify_tracks <- dbGetQuery(con,
 interprets <- dbGetQuery(con, "select * from interprets") %>%
     mutate(interpret = gsub("`", "'", interpret))
 
+tracks <- dbGetQuery(con, "select * from tracks")
+
 old_music <- playlist %>% 
     filter(!last_week)
 
@@ -45,17 +47,19 @@ last_week <- playlist %>%
     filter(station_id == STATION_ID) %>%
     count(interpret_id, track_id, sort = TRUE) %>% 
     left_join(., interprets, by = "interpret_id") %>% 
-    left_join(., spotify_tracks, by = c("interpret_id", "track_id")) %>%
+    left_join(., tracks, by = "track_id") %>% 
+    left_join(., spotify_tracks, by = c("interpret_id", "track_id")) %>% 
     # filter(!is.na(spotify_url)) %>%
-    mutate(song = paste0(interpret, ": ", track_name)) %>%
+    mutate(song = paste0(interpret, ": ", track)) %>%
     select(song, spotify_url, spotify_track_id, n) %>%
     head(., 30)
 
 best_new_music <- new_music %>%
     left_join(., interprets, by = "interpret_id") %>% 
+    left_join(., tracks, by = "track_id") %>% 
     left_join(., spotify_tracks, by = c("interpret_id", "track_id")) %>%
     # filter(!is.na(spotify_url)) %>%
-    mutate(song = paste0(interpret, ": ", track_name)) %>%
+    mutate(song = paste0(interpret, ": ", track)) %>%
     select(song, spotify_url, spotify_track_id, n) %>%
     head(., 30)
 

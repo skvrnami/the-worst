@@ -67,7 +67,9 @@ tracks <- dbGetQuery(con, "select distinct
 
 spotify_tracks <- dbGetQuery(con, "select * from spotify_tracks")
 
-new_tracks <- tracks %>% filter(!track_id %in% spotify_tracks$track_id)
+new_tracks <- tracks %>% 
+    filter(!track_id %in% spotify_tracks$track_id) %>%
+    unique
 
 for(i in seq(nrow(new_tracks))){
     cat(i, "\n")
@@ -98,7 +100,8 @@ spotify_interpret_ids <- unlist(strsplit(spotify_tracks$spotify_artist_id, ";"))
 spotify_interprets <- dbGetQuery(con, "select * from spotify_interprets")
 
 new_spotify_interpret_ids <- na.omit(spotify_interpret_ids[!spotify_interpret_ids %in%
-                                                       spotify_interprets$spotify_id])
+                                                       spotify_interprets$spotify_id]) %>%
+    unique
 
 
 insert_spotify_interpret_into_db <- function(connection, result){
@@ -121,4 +124,6 @@ for(i in seq(length(new_spotify_interpret_ids))){
     insert_spotify_interpret_into_db(con, result)
     Sys.sleep(0.1)
 }
+
+dbDisconnect(con)
 
