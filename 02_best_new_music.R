@@ -2,7 +2,9 @@ library(dplyr)
 library(RSQLite)
 library(spotifyr)
 
-STATION_ID <- "radiowave"
+args <- commandArgs(trailingOnly=TRUE)
+
+STATION_ID <- args[1]
 
 con <- dbConnect(SQLite(), "data_2020.sqlite")
 
@@ -16,6 +18,11 @@ playlist <- dbGetQuery(con, "select * from playlist") %>%
            last_week = week_no == max(week_no)) 
 
 MAX_WEEK <- max(playlist$week_no)
+MAX_YEAR <- playlist %>% 
+    filter(last_week) %>%
+    pull(date) %>%
+    min %>%
+    lubridate::year()
 
 spotify_tracks <- dbGetQuery(con, 
                              "select 
@@ -29,7 +36,10 @@ spotify_tracks <- dbGetQuery(con,
 interprets <- dbGetQuery(con, "select * from interprets") %>%
     mutate(interpret = gsub("`", "'", interpret))
 
-tracks <- dbGetQuery(con, "select * from tracks")
+tracks <- dbGetQuery(con, "select * from tracks") %>%
+    mutate(track = gsub("`", "'", track))
+
+dbDisconnect(con)
 
 old_music <- playlist %>% 
     filter(!last_week)
@@ -38,21 +48,20 @@ new_music <- playlist %>%
     filter(last_week) %>% 
     filter(station_id == STATION_ID) %>%
     anti_join(., old_music, by = c("interpret_id", "track_id")) %>%
-    count(interpret_id, track_id, sort = TRUE)
+    count(interpret_id, track_id, sort = TRUE) %>%
+    unique
 
-nrow(new_music)
-
-last_week <- playlist %>%
-    filter(last_week) %>%
-    filter(station_id == STATION_ID) %>%
-    count(interpret_id, track_id, sort = TRUE) %>% 
-    left_join(., interprets, by = "interpret_id") %>% 
-    left_join(., tracks, by = "track_id") %>% 
-    left_join(., spotify_tracks, by = c("interpret_id", "track_id")) %>% 
-    # filter(!is.na(spotify_url)) %>%
-    mutate(song = paste0(interpret, ": ", track)) %>%
-    select(song, spotify_url, spotify_track_id, n) %>%
-    head(., 30)
+# last_week <- playlist %>%
+#     filter(last_week) %>%
+#     filter(station_id == STATION_ID) %>%
+#     count(interpret_id, track_id, sort = TRUE) %>% 
+#     left_join(., interprets, by = "interpret_id") %>% 
+#     left_join(., tracks, by = "track_id") %>% 
+#     left_join(., spotify_tracks, by = c("interpret_id", "track_id")) %>% 
+#     # filter(!is.na(spotify_url)) %>%
+#     mutate(song = paste0(interpret, ": ", track)) %>%
+#     select(song, spotify_url, spotify_track_id, n) %>%
+#     head(., 30)
 
 best_new_music <- new_music %>%
     left_join(., interprets, by = "interpret_id") %>% 
@@ -60,10 +69,11 @@ best_new_music <- new_music %>%
     left_join(., spotify_tracks, by = c("interpret_id", "track_id")) %>%
     # filter(!is.na(spotify_url)) %>%
     mutate(song = paste0(interpret, ": ", track)) %>%
+    unique %>% 
     select(song, spotify_url, spotify_track_id, n) %>%
     head(., 30)
 
-MD_TITLE <- glue::glue("# New {STATION_ID} music")
+MD_TITLE <- glue::glue("# Discover {STATION_ID} weekly")
 MD_BODY <- purrr::map2_chr(best_new_music$song, best_new_music$spotify_url, 
                            function(song, url) {
                                if(is.na(url)){
@@ -72,7 +82,7 @@ MD_BODY <- purrr::map2_chr(best_new_music$song, best_new_music$spotify_url,
                                glue::glue("- [{song}]({url})\n")
                            })
 
-writeLines(c(MD_TITLE, "\n", MD_BODY), con = paste0("output/", STATION_ID, "_", MAX_WEEK, ".md"))
+writeLines(c(MD_TITLE, "\n", MD_BODY), con = glue::glue("output/md/{STATION_ID}_{MAX_WEEK}.md"))
 
 # order playlist using hierarchical clustering by audio features
 
@@ -93,5 +103,15 @@ best_new_music_clustered <- best_new_music %>%
     filter(!is.na(spotify_track_id)) %>%
     slice(hc$order)
 
+bnm_final <- best_new_music_clustered %>%
+    mutate(spotify_uri = paste0("spotify:track:", spotify_track_id))
+
+write.csv(bnm_final, glue::glue("output/csv/discover_{STATION_ID}_{MAX_YEAR}_(#{MAX_WEEK}).csv"),
+          row.names = FALSE)
+
 # TODO: create playlist on Spotify
+# spotify_playlist <- create_playlist("majky_", "test", public = FALSE)
+# add_tracks_to_playlist(spotify_playlist$id, 
+#                        bnm_final$spotify_uri)
+
     

@@ -1,4 +1,4 @@
-# New radiowave music
+# Discover radiowave weekly
 
 
 - [RICO NASTY: Own It](https://open.spotify.com/track/17zka6o2SSRkifCLaCABQD)
@@ -14,7 +14,7 @@
 - [CHROMEO: Come Alive ft. Toro Y Moi](https://www.youtube.com/results?search_query=CHROMEO: Come Alive ft. Toro Y Moi)
 - [LORDE: Homemade Dynamite](https://open.spotify.com/track/5u64RlrnvvbtNh6R0EMh6o)
 - [AWALI: Strong White Wings](https://open.spotify.com/track/5fOlpTwkhFNUcdVAiNt8nv)
-- [BAKONGO: Grind (Dreem Tran`s edit)](https://www.youtube.com/results?search_query=BAKONGO: Grind (Dreem Tran`s edit))
+- [BAKONGO: Grind (Dreem Tran's edit)](https://www.youtube.com/results?search_query=BAKONGO: Grind (Dreem Tran's edit))
 - [MANCUSO: Up In The Smoke](https://www.youtube.com/results?search_query=MANCUSO: Up In The Smoke)
 - [TYGA: Rack City](https://open.spotify.com/track/0srwKuJPH8yBzzFUJMBQM2)
 - [FLOEX & TOM HODGE: John Doe Arise (Max Cooper remix)](https://open.spotify.com/track/4YNCqicwtSSsLrBk17oMVg)

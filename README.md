@@ -13,3 +13,11 @@ Místo toho jsem vytvořil [generátor náhodných playlistů](http://skvrnami.g
 ze skladeb hraných na Českém rozhlasu. Defaultně to generuje skladby hrané
 na [Radiu Wave](https://wave.rozhlas.cz/), ale pokud chcete trýznit sebe nebo 
 někoho jiného, můžete si zkusit vygenerovat playlist třeba z [Dvojky](https://dvojka.rozhlas.cz/).  
+
+### Usage
+
+`Rscript 00_get_radio_data.R 2020-12-01 2020-12-07`  
+`Rscript 00_get_spotify_data.R`  
+`Rscript 00_get_wiki_data.R`
+`Rscript 01_process_data.R`
+`Rscript 02_best_new_music.R radiowave`
