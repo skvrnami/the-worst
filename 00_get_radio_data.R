@@ -6,8 +6,6 @@ args <- commandArgs(trailingOnly=TRUE)
 START_DATE <- args[1] #"2019-09-02"
 END_DATE <- args[2] #"2019-12-31"
 
-Sys.Date() - 1
-
 if(length(args) == 0){
     START_DATE <- as.character(Sys.Date() - 7)
     END_DATE <- as.character(Sys.Date() - 1)
