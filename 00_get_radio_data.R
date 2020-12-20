@@ -6,6 +6,13 @@ args <- commandArgs(trailingOnly=TRUE)
 START_DATE <- args[1] #"2019-09-02"
 END_DATE <- args[2] #"2019-12-31"
 
+Sys.Date() - 1
+
+if(length(args) == 0){
+    START_DATE <- as.character(Sys.Date() - 7)
+    END_DATE <- as.character(Sys.Date() - 1)
+}
+
 CREATE_PLAYLIST_SQL <- "create table if not exists playlist (station_id text, date text, id int, interpret_id int, track_id int, unique (station_id, date, id, interpret_id, track_id))"
 CREATE_INTERPRET_SQL <- "create table if not exists interprets (interpret_id int, interpret text, unique (interpret_id, interpret))"
 CREATE_TRACK_SQL <- "create table if not exists tracks (track_id int, track text, unique (track_id, track))"
@@ -68,7 +75,7 @@ send_data_to_db <- function(connection, station, data){
         insert_tracks_to_db(connection, NEW_TRACKS)    
     }
     
-    insert_playlist_to_db(connection, station, data)
+    insert_playlist_to_db(connection, station, data)    
 }
 
 DATES <- seq(as.Date(START_DATE), as.Date(END_DATE), by = 1) %>%
@@ -78,7 +85,9 @@ get_station_data <- function(connection, dates, station){
     for(i in dates){
         cat(i, "\n")
         out <- get_playlist(i, station)
-        send_data_to_db(connection, station, out)
+        if(length(out) > 0){
+            send_data_to_db(connection, station, out)
+        }
     }
 }
 
@@ -86,6 +95,7 @@ get_station_data(con, DATES, "radiozurnal")
 get_station_data(con, DATES, "dvojka")
 get_station_data(con, DATES, "jazz")
 get_station_data(con, DATES, "radiowave")
+get_station_data(con, DATES, "vltava")
 get_station_data(con, DATES, "radiojunior")
 get_station_data(con, DATES, "brno")
 get_station_data(con, DATES, "cb")
@@ -98,3 +108,5 @@ get_station_data(con, DATES, "regina")
 get_station_data(con, DATES, "strednicechy")
 get_station_data(con, DATES, "sever")
 get_station_data(con, DATES, "vysocina")
+
+dbDisconnect(con)

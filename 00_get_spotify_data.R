@@ -72,8 +72,7 @@ new_tracks <- tracks %>%
     unique
 
 for(i in seq(nrow(new_tracks))){
-    cat(i, "\n")
-    cat(new_tracks$interpret[i], ":", new_tracks$track[i], "\n")
+    cat(i, ")", new_tracks$interpret[i], ":", new_tracks$track[i], "\n")
     result <- search_spotify(paste0(new_tracks$interpret[i], ": ", new_tracks$track[i]), 
                              type = "track")
     insert_spotify_track_into_db(con, new_tracks$interpret_id[i], 

@@ -1,5 +1,4 @@
 get_playlist <- function(date, station = "radiowave"){
-    
     ALLOWED_STATIONS <- c(
         "radiozurnal", 
         "dvojka",
@@ -38,6 +37,5 @@ get_playlist <- function(date, station = "radiowave"){
     
     out <- httr::GET(url = paste0(BASE_URL, YEAR, "/", MONTH, "/", 
                                   DAY, "/", station, ".json"))
-    
     jsonlite::fromJSON(stringr::str_conv(out$content, "UTF-8"))$data
 }

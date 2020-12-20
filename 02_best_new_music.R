@@ -4,7 +4,7 @@ library(spotifyr)
 
 args <- commandArgs(trailingOnly=TRUE)
 
-STATION_ID <- args[1]
+STATION_ID <- "vltava" #args[1]
 
 con <- dbConnect(SQLite(), "data_2020.sqlite")
 
@@ -13,6 +13,7 @@ convert_to_date <- function(x){
 }
 
 playlist <- dbGetQuery(con, "select * from playlist") %>%
+    filter(station_id == STATION_ID) %>%
     mutate(ymd = convert_to_date(date), 
            week_no = lubridate::week(ymd), 
            last_week = week_no == max(week_no)) 
@@ -46,7 +47,7 @@ old_music <- playlist %>%
 
 new_music <- playlist %>% 
     filter(last_week) %>% 
-    filter(station_id == STATION_ID) %>%
+    # filter(station_id == STATION_ID) %>%
     anti_join(., old_music, by = c("interpret_id", "track_id")) %>%
     count(interpret_id, track_id, sort = TRUE) %>%
     unique
@@ -70,24 +71,32 @@ best_new_music <- new_music %>%
     # filter(!is.na(spotify_url)) %>%
     mutate(song = paste0(interpret, ": ", track)) %>%
     unique %>% 
-    select(song, spotify_url, spotify_track_id, n) %>%
-    head(., 30)
+    select(song, spotify_url, spotify_track_id, n)
 
-MD_TITLE <- glue::glue("# Discover {STATION_ID} weekly")
-MD_BODY <- purrr::map2_chr(best_new_music$song, best_new_music$spotify_url, 
-                           function(song, url) {
-                               if(is.na(url)){
-                                   url <- glue::glue("https://www.youtube.com/results?search_query={song}")
-                               }
-                               glue::glue("- [{song}]({url})\n")
-                           })
+write_md <- function(df, station_id, max_week){
+    MD_TITLE <- glue::glue("# Discover {station_id} weekly")
+    MD_BODY <- purrr::map2_chr(df$song, df$spotify_url, 
+                               function(song, url) {
+                                   if(is.na(url)){
+                                       url <- glue::glue("https://www.youtube.com/results?search_query={song}")
+                                   }
+                                   glue::glue("- [{song}]({url})\n")
+                               })
+    
+    writeLines(c(MD_TITLE, "\n", MD_BODY), con = glue::glue("output/md/{station_id}_{max_week}.md"))
+    
+}
 
-writeLines(c(MD_TITLE, "\n", MD_BODY), con = glue::glue("output/md/{STATION_ID}_{MAX_WEEK}.md"))
+best_new_music %>%
+    head(30) %>%
+    write_md(., STATION_ID, MAX_WEEK)
 
 # order playlist using hierarchical clustering by audio features
+best_new_music_on_spotify <- best_new_music %>%
+    filter(!is.na(spotify_track_id)) %>% 
+    head(30)
 
-SPOTIFY_IDS <- best_new_music %>%
-    filter(!is.na(spotify_track_id)) %>%
+SPOTIFY_IDS <- best_new_music_on_spotify %>%
     pull(spotify_track_id)
 
 best_nm_features <- get_track_audio_features(SPOTIFY_IDS)
