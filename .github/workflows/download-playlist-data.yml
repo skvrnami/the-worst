@@ -32,7 +32,7 @@ jobs:
       - name: Check DB
         run: Rscript -e 'file.exists("data_2020.sqlite")'
       - name: Check connection
-        run: Rscript -e 'library(RSQLite);con <- dbConnect(SQLite(), "data_2020.sqlite");print(con)'
+        run: Rscript -e 'library(RSQLite);con <- dbConnect(SQLite(), "data_2020.sqlite");o <- dbGetQuery(con, "select count(*) from playlist");print(o);dbDisconnect(con)'
       - name: Scrape playlist data from the Czech Radio's API
         run: Rscript 00_get_radio_data.R
 
