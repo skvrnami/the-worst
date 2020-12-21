@@ -31,6 +31,8 @@ jobs:
           Rscript -e "install.packages('renv'); renv::restore(confirm = FALSE)"
       - name: Check DB
         run: Rscript -e 'file.exists("data_2020.sqlite")'
+      - name: Check connection
+        run: Rscript -e 'library(RSQLite);con <- dbConnect(SQLite(), "data_2020.sqlite");print(con)'
       - name: Scrape playlist data from the Czech Radio's API
         run: Rscript 00_get_radio_data.R
 
