@@ -1,6 +1,7 @@
 name: Download playlist data
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '15 3 * * 1'
 
@@ -28,6 +29,8 @@ jobs:
       - name: Install Package Dependencies
         run: |-
           Rscript -e "install.packages('renv'); renv::restore(confirm = FALSE)"
+      - name: Check DB
+        run: Rscript -e 'file.exists("data_2020.sqlite")'
       - name: Scrape playlist data from the Czech Radio's API
         run: Rscript 00_get_radio_data.R
 
