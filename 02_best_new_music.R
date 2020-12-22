@@ -1,18 +1,15 @@
 library(dplyr)
-library(RSQLite)
 library(spotifyr)
 
 args <- commandArgs(trailingOnly=TRUE)
 
-STATION_ID <- "vltava" #args[1]
-
-con <- dbConnect(SQLite(), "data_2020.sqlite")
+STATION_ID <- args[1]
 
 convert_to_date <- function(x){
     as.Date(x, format = "%Y-%m-%dT%H:%M:%S+01:00")
 }
 
-playlist <- dbGetQuery(con, "select * from playlist") %>%
+playlist <- readRDS("output/playlist.RData") %>%
     filter(station_id == STATION_ID) %>%
     mutate(ymd = convert_to_date(date), 
            week_no = lubridate::week(ymd), 
@@ -25,22 +22,18 @@ MAX_YEAR <- playlist %>%
     min %>%
     lubridate::year()
 
-spotify_tracks <- dbGetQuery(con, 
-                             "select 
-                                interpret_id, 
-                                track_id, 
-                                spotify_track_id,
-                                spotify_url, 
-                                track_name 
-                             from spotify_tracks")
-
-interprets <- dbGetQuery(con, "select * from interprets") %>%
+spotify_tracks <- readRDS("output/spotify_tracks.RData") %>%
+    select(interpret_id, 
+           track_id, 
+           spotify_track_id,
+           spotify_url, 
+           track_name)
+    
+interprets <- readRDS("output/interprets.RData") %>%
     mutate(interpret = gsub("`", "'", interpret))
 
-tracks <- dbGetQuery(con, "select * from tracks") %>%
+tracks <- readRDS("output/tracks.RData") %>%
     mutate(track = gsub("`", "'", track))
-
-dbDisconnect(con)
 
 old_music <- playlist %>% 
     filter(!last_week)
@@ -119,8 +112,6 @@ write.csv(bnm_final, glue::glue("output/csv/discover_{STATION_ID}_{MAX_YEAR}_(#{
           row.names = FALSE)
 
 # TODO: create playlist on Spotify
-# spotify_playlist <- create_playlist("majky_", "test", public = FALSE)
-# add_tracks_to_playlist(spotify_playlist$id, 
+# spotify_playlist <- create_playlist("majky_", "Discover Wave Weekly (#51)", public = FALSE)
+# add_tracks_to_playlist(spotify_playlist$id,
 #                        bnm_final$spotify_uri)
-
-    

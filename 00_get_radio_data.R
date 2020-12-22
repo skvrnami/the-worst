@@ -1,5 +1,4 @@
 library(dplyr)
-library(RSQLite)
 
 args <- commandArgs(trailingOnly=TRUE)
 
@@ -11,69 +10,38 @@ if(length(args) == 0){
     END_DATE <- as.character(Sys.Date() - 1)
 }
 
-CREATE_PLAYLIST_SQL <- "create table if not exists playlist (station_id text, date text, id int, interpret_id int, track_id int, unique (station_id, date, id, interpret_id, track_id))"
-CREATE_INTERPRET_SQL <- "create table if not exists interprets (interpret_id int, interpret text, unique (interpret_id, interpret))"
-CREATE_TRACK_SQL <- "create table if not exists tracks (track_id int, track text, unique (track_id, track))"
-
-con <- dbConnect(SQLite(), "data_2020.sqlite")
-dbClearResult(dbSendStatement(con, CREATE_INTERPRET_SQL))
-dbClearResult(dbSendStatement(con, CREATE_TRACK_SQL))
-dbClearResult(dbSendStatement(con, CREATE_PLAYLIST_SQL))
-
 source("src/funs.R")
 
-insert_interprets_to_db <- function(connection, interprets){
-    r <- dbSendStatement(connection, 
-                    paste0("insert into interprets values ", 
-                           paste0("(", interprets$interpret_id, ", '", 
-                                  gsub("'", "`", interprets$interpret), "')", collapse = ", ")))
-    dbClearResult(r)
-}
-
-insert_tracks_to_db <- function(connection, tracks){
-    r <- dbSendStatement(connection, 
-                         paste0("insert into tracks values ", 
-                                paste0("(", tracks$track_id, ", '", 
-                                       gsub("'", "`", tracks$track), "')", 
-                                       collapse = ", ")))
-    dbClearResult(r)
-}
-
-insert_playlist_to_db <- function(connection, station, playlist){
-    r <- dbSendStatement(connection, 
-                         paste0("insert into playlist values ", 
-                                paste0("('", station, "', '", 
-                                       playlist$since, "', ", 
-                                       playlist$id, ", ", 
-                                       playlist$interpret_id, ", ", 
-                                       playlist$track_id, ")",
-                                       collapse = ", ")))
-    dbClearResult(r)
-}
-
-send_data_to_db <- function(connection, station, data){
-    
-    EXISTING_INTERPRETS <- dbGetQuery(con, "select * from interprets")
+save_data <- function(station, data){
+    EXISTING_INTERPRETS <- readRDS("output/interprets.RData")
     
     NEW_INTERPRETS <- data %>% select(interpret_id, interpret) %>%
         filter(!interpret_id %in% EXISTING_INTERPRETS$interpret_id) %>%
         unique
     
-    EXISTING_TRACKS <- dbGetQuery(con, "select * from tracks")
+    EXISTING_TRACKS <- readRDS("output/tracks.RData")
     
     NEW_TRACKS <- data %>% select(track_id, track) %>%
         filter(!track_id %in% EXISTING_TRACKS$track_id) %>%
         unique
     
     if(nrow(NEW_INTERPRETS) > 0){
-        insert_interprets_to_db(connection, NEW_INTERPRETS)    
+        interprets <- bind_rows(EXISTING_INTERPRETS, NEW_INTERPRETS)
+        saveRDS(interprets, "output/interprets.RData")
     }
     
     if(nrow(NEW_TRACKS) > 0){
-        insert_tracks_to_db(connection, NEW_TRACKS)    
+        tracks <- bind_rows(EXISTING_TRACKS, NEW_TRACKS)
+        saveRDS(tracks, "output/tracks.RData")
     }
     
-    insert_playlist_to_db(connection, station, data)    
+    data <- data %>%
+        mutate(station_id = station) %>%
+        rename(date = since) %>%
+        select(-c(files, interpret, track))
+    playlist <- readRDS("output/playlist.RData") %>%
+        bind_rows(., data)
+    saveRDS(playlist, "output/playlist.RData")
 }
 
 DATES <- seq(as.Date(START_DATE), as.Date(END_DATE), by = 1) %>%
@@ -84,7 +52,7 @@ get_station_data <- function(connection, dates, station){
         cat(i, "\n")
         out <- get_playlist(i, station)
         if(length(out) > 0){
-            send_data_to_db(connection, station, out)
+            save_data(station, out)
         }
     }
 }
@@ -106,5 +74,3 @@ get_station_data(con, DATES, "regina")
 get_station_data(con, DATES, "strednicechy")
 get_station_data(con, DATES, "sever")
 get_station_data(con, DATES, "vysocina")
-
-dbDisconnect(con)

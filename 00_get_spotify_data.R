@@ -1,23 +1,5 @@
 library(dplyr)
-library(RSQLite)
 library(spotifyr)
-
-con <- dbConnect(SQLite(), "data_2020.sqlite")
-
-r2 <- dbSendStatement(con, "create table if not exists spotify_tracks (
-                      interpret_id int, 
-                      track_id int, 
-                      spotify_artist_id text,
-                      duration_ms int,
-                      explicit int,
-                      spotify_track_id text,
-                      track_name text,
-                      popularity int,
-                      spotify_url text,
-                      found int
-)")
-
-dbClearResult(r2)
 
 flatten_spotify_track <- function(result){
     data.frame(
@@ -31,98 +13,72 @@ flatten_spotify_track <- function(result){
     )
 }
 
-insert_spotify_track_into_db <- function(connection, interpret_id, track_id, result){
-    if(nrow(result) > 0){
-        tmp <- flatten_spotify_track(result) 
-        r <- dbSendStatement(connection, 
-                             paste0("insert into spotify_tracks values ", 
-                                    paste0("(", interpret_id, ", ",
-                                           track_id, ", '",
-                                           tmp$spotify_artist_id, "', ",
-                                           tmp$duration_ms, ", ", 
-                                           as.numeric(tmp$explicit), ", '", 
-                                           tmp$spotify_track_id, "', '", 
-                                           gsub("'", "''", tmp$track_name), "', ", 
-                                           tmp$popularity, ", '", 
-                                           tmp$spotify_url, "', ", 
-                                           1, ")")))
-        dbClearResult(r)
-    }else{
-        r <- dbSendStatement(connection, paste0("insert into spotify_tracks (interpret_id, track_id, found) values (", 
-                                                interpret_id, ", ", track_id, ", ", 0, ")"))
-        dbClearResult(r)
-    }
-}
-
-interprets <- dbGetQuery(con, "select * from interprets")
-
-tracks <- dbGetQuery(con, "select distinct
-                            t.interpret_id,
-                            tracks.track_id,
-                            tracks.track
-                        from tracks
-                        left join (select distinct interpret_id, track_id from playlist) t
-                        on t.track_id=tracks.track_id") %>%
+interprets <- readRDS("output/interprets.RData")
+playlist <- readRDS("output/playlist.RData") %>%
+    select(interpret_id, track_id) %>%
+    unique
+tracks <- readRDS("output/tracks.RData") %>%
+    left_join(., playlist, by = "track_id") %>%
     left_join(., interprets, by = "interpret_id")
 
-spotify_tracks <- dbGetQuery(con, "select * from spotify_tracks")
+spotify_tracks <- readRDS("output/spotify_tracks.RData")
 
 new_tracks <- tracks %>% 
     filter(!track_id %in% spotify_tracks$track_id) %>%
-    unique
+    unique %>%
+    group_by(interpret_id, track_id) %>%
+    mutate(row_no = row_number()) %>%
+    ungroup %>% 
+    filter(row_no == 1) %>%
+    select(-row_no)
 
-for(i in seq(nrow(new_tracks))){
-    cat(i, ")", new_tracks$interpret[i], ":", new_tracks$track[i], "\n")
-    result <- search_spotify(paste0(new_tracks$interpret[i], ": ", new_tracks$track[i]), 
+find_track_on_spotify <- function(interpret, track, track_id, interpret_id){
+    result <- search_spotify(paste0(interpret, ": ", track), 
                              type = "track")
-    insert_spotify_track_into_db(con, new_tracks$interpret_id[i], 
-                                 new_tracks$track_id[i], result)
-    Sys.sleep(0.1)
+    if(nrow(result) > 0){
+        flatten_spotify_track(result) %>%
+            mutate(track_id = track_id, 
+                   interpret_id = interpret_id)
+    }else{
+        data.frame(
+            track_id = track_id, 
+            interpret_id = interpret_id
+        )
+    }
 }
 
+purrr::map_df(seq(nrow(new_tracks)), function(x) {
+    Sys.sleep(0.1)
+    cat(x, ")", new_tracks$interpret[x], ":", new_tracks$track[x], "\n")
+    find_track_on_spotify(new_tracks$interpret[x], new_tracks$track[x], 
+                          new_tracks$track_id[x], new_tracks$interpret_id[x])
+}) -> new_spotify_tracks    
+    
+updated_spotify_tracks <- bind_rows(spotify_tracks, new_spotify_tracks)
+saveRDS(updated_spotify_tracks, "output/spotify_tracks.RData")
+
 # find interprets on spotify
+spotify_interpret_ids <- unlist(strsplit(updated_spotify_tracks$spotify_artist_id, ";"))
 
-r <- dbSendStatement(con, "create table if not exists spotify_interprets (
-                                spotify_id text,
-                                interpret text,
-                                genre text,
-                                popularity int,
-                                spotify_url text,
-                                spotify_followers int)")
-dbClearResult(r)
-
-
-spotify_tracks <- dbGetQuery(con, "select * from spotify_tracks")
-
-spotify_interpret_ids <- unlist(strsplit(spotify_tracks$spotify_artist_id, ";"))
-
-spotify_interprets <- dbGetQuery(con, "select * from spotify_interprets")
+spotify_interprets <- readRDS("output/spotify_interprets.RData")
 
 new_spotify_interpret_ids <- na.omit(spotify_interpret_ids[!spotify_interpret_ids %in%
                                                        spotify_interprets$spotify_id]) %>%
     unique
 
+batches_no <- ceiling(length(new_spotify_interpret_ids) / 50)
+batches <- purrr::map(1:batches_no, function(x) 
+    new_spotify_interpret_ids[((x - 1) * 50 + 1):(x * 50)])
 
-insert_spotify_interpret_into_db <- function(connection, result){
-    r <- dbSendStatement(connection,
-                             paste0("insert into spotify_interprets values ",
-                                    paste0("('",
-                                           result$id, "', '",
-                                           gsub("'", "''", result$name), "', '",
-                                           paste0(gsub("'", "''", result$genres), 
-                                                  collapse = ";"), "', ",
-                                           result$popularity, ", '",
-                                           result$external_urls$spotify, "', ",
-                                           result$followers$total, ")")))
-    dbClearResult(r)
-}
+new_spotify_interprets <- purrr::map_df(batches, function(x) get_artists(na.omit(x)))
+updated_spotify_interprets <- new_spotify_interprets %>%
+    mutate(genre = purrr::map_chr(genres, ~paste0(.x, collapse = ";"))) %>%
+    select(spotify_id = id, 
+           interpret = name, 
+           genre, 
+           popularity, 
+           spotify_url = external_urls.spotify, 
+           spotify_followers = followers.total) %>%
+    bind_rows(spotify_interprets, .) 
 
-for(i in seq(length(new_spotify_interpret_ids))){
-    cat(i, "\n")
-    result <- get_artist(new_spotify_interpret_ids[i])
-    insert_spotify_interpret_into_db(con, result)
-    Sys.sleep(0.1)
-}
-
-dbDisconnect(con)
-
+saveRDS(updated_spotify_interprets, "output/spotify_interprets.RData")
