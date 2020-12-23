@@ -1,17 +1,7 @@
 library(dplyr)
 library(spotifyr)
 
-flatten_spotify_track <- function(result){
-    data.frame(
-        spotify_artist_id = paste0(result$artists[1][[1]]$id, collapse = ";"), 
-        duration_ms = result$duration_ms[1], 
-        explicit = result$explicit[1], 
-        spotify_track_id = result$id[1], 
-        track_name = result$name[1], 
-        popularity = result$popularity[1], 
-        spotify_url = result$external_urls.spotify[1]
-    )
-}
+source("src/funs.R")
 
 interprets <- readRDS("output/interprets.RData")
 playlist <- readRDS("output/playlist.RData") %>%
@@ -30,22 +20,9 @@ new_tracks <- tracks %>%
     mutate(row_no = row_number()) %>%
     ungroup %>% 
     filter(row_no == 1) %>%
-    select(-row_no)
-
-find_track_on_spotify <- function(interpret, track, track_id, interpret_id){
-    result <- search_spotify(paste0(interpret, ": ", track), 
-                             type = "track")
-    if(nrow(result) > 0){
-        flatten_spotify_track(result) %>%
-            mutate(track_id = track_id, 
-                   interpret_id = interpret_id)
-    }else{
-        data.frame(
-            track_id = track_id, 
-            interpret_id = interpret_id
-        )
-    }
-}
+    select(-row_no) %>%
+    mutate(track = remove_text_in_bracket(track)) %>%
+    mutate(track = remove_text_after_feat(track))
 
 purrr::map_df(seq(nrow(new_tracks)), function(x) {
     Sys.sleep(0.1)

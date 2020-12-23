@@ -5,6 +5,15 @@ args <- commandArgs(trailingOnly=TRUE)
 
 STATION_ID <- args[1]
 
+STATIONS <- c(
+    "radiowave"="Wave", 
+    "jazz"="Jazz", 
+    "vltava"="Vltava", 
+    "radiozurnal"="Radiožurnál"
+)
+
+STATION_NAME <- STATIONS[STATION_ID]
+
 convert_to_date <- function(x){
     as.Date(x, format = "%Y-%m-%dT%H:%M:%S+01:00")
 }
@@ -112,6 +121,7 @@ write.csv(bnm_final, glue::glue("output/csv/discover_{STATION_ID}_{MAX_YEAR}_(#{
           row.names = FALSE)
 
 # TODO: create playlist on Spotify
-# spotify_playlist <- create_playlist("majky_", "Discover Wave Weekly (#51)", public = FALSE)
+# spotify_playlist <- create_playlist("majky_", glue::glue("Discover {STATION_NAME} Weekly (#{MAX_WEEK})"),
+#                                     public = FALSE)
 # add_tracks_to_playlist(spotify_playlist$id,
 #                        bnm_final$spotify_uri)
