@@ -18,6 +18,6 @@ někoho jiného, můžete si zkusit vygenerovat playlist třeba z [Dvojky](https
 
 `Rscript 00_get_radio_data.R 2020-12-01 2020-12-07`  
 `Rscript 00_get_spotify_data.R`  
-`Rscript 00_get_wiki_data.R`
-`Rscript 01_process_data.R`
-`Rscript 02_best_new_music.R radiowave`
+`Rscript 00_get_wiki_data.R`  
+`Rscript 01_process_data.R`  
+`Rscript 02_best_new_music.R radiowave`  

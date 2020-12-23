@@ -1,12 +1,7 @@
 library(dplyr)
-library(RSQLite)
 library(WikidataR)
 
-con <- dbConnect(SQLite(), "data_2020.sqlite")
-interprets <- dbGetQuery(con, "select * from interprets")
-
-r <- dbSendStatement(con, "create table if not exists wikipedia_interprets (interpret_id int, wikipedia_id text, interpret text, type text, active_from text, active_to text)")
-dbClearResult(r)
+interprets <- readRDS("output/interprets.RData")
 
 find_artist <- function(x){
     x[unlist(lapply(x, function(x) grepl("band|singer|artist|composer|rapper", x$description))) & 
@@ -24,20 +19,6 @@ convert_date_or_na <- function(x){
         }
         tmp
     }
-}
-
-insert_death_into_db <- function(connection, interpret_id, wikipedia_id, 
-                                 interpret, type, active_from, active_to){
-    r <- dbSendStatement(connection, 
-                         paste0("insert into wikipedia_interprets values (", 
-                                interpret_id, ", '", 
-                                wikipedia_id, "', '",
-                                gsub("'", "''", interpret), "', '", 
-                                gsub("'", "''", type), "', '", 
-                                active_from, "', '", 
-                                active_to, "')"
-                                ))
-    dbClearResult(r)
 }
 
 get_year_of_death <- function(int){
@@ -62,7 +43,7 @@ possibly_get_year_of_birth <- purrr::possibly(get_year_of_birth, NA_character_)
 possibly_get_years_active_from <- purrr::possibly(get_years_active_from, NA_character_)
 possibly_get_years_active_to <- purrr::possibly(get_years_active_to, NA_character_)
 
-get_years_active <- function(connection, interpret, interpret_id){
+get_years_active <- function(interpret, interpret_id){
     item <- find_item(interpret, lang = "cs")
     
     if(length(item)){
@@ -72,6 +53,9 @@ get_years_active <- function(connection, interpret, interpret_id){
             int <- get_item(wikipedia_id)
             
             type <- artists[[1]]$description
+            if(is.null(type)){
+                type <- NA
+            }
             
             active_from <- possibly_get_year_of_birth(int)
             active_to <- possibly_get_year_of_death(int)
@@ -81,22 +65,38 @@ get_years_active <- function(connection, interpret, interpret_id){
                 active_to <- possibly_get_years_active_to(int)
             }
             
-            insert_death_into_db(connection, interpret_id, wikipedia_id, interpret, 
-                                 type, active_from, active_to)   
+            out <- data.frame(
+                interpret_id = interpret_id, 
+                interpret = interpret, 
+                type = type, 
+                active_from = active_from, 
+                active_to = active_to
+            )
+            return(out)
         }
     }
+    
+    data.frame(
+        interpret_id = interpret_id, 
+        interpret = interpret
+    )
+    
 }
 
 # get new interprets
-wikipedia_interprets <- dbGetQuery(con, "select * from wikipedia_interprets")
+wikipedia_interprets <- readRDS("output/wikipedia_interprets.RData") %>%
+    mutate(active_from = as.Date(active_from), 
+           active_to = as.Date(active_to, format = "%Y-%m-%d"))
 
 new_interprets <- interprets[!interprets$interpret_id %in% wikipedia_interprets$interpret_id, ]
 
-for(i in seq(nrow(new_interprets))){
-    cat(new_interprets$interpret[i], "\n")
-    get_years_active(connection = con, 
-              interpret = new_interprets$interpret[i], 
-              interpret_id = new_interprets$interpret_id[i])
-}
+purrr::map_df(seq(nrow(new_interprets)), function(x) {
+    cat(x, "\n")
+    get_years_active(interpret = new_interprets$interpret[x], 
+                     interpret_id = new_interprets$interpret_id[x])
+}) -> new_wikipedia_interprets
+
+updated_wikipedia_interprets <- bind_rows(wikipedia_interprets, new_wikipedia_interprets)
+saveRDS(updated_wikipedia_interprets, "output/wikipedia_interprets.RData")
 
 # TODO: update data for interprets with NA in death column

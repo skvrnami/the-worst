@@ -1,14 +1,11 @@
 library(dplyr)
-library(RSQLite)
 
-con <- dbConnect(SQLite(), "data_2020.sqlite")
-
-playlist <- dbGetQuery(con, "select * from playlist")
-interprets <- dbGetQuery(con, "select * from interprets")
-tracks <- dbGetQuery(con, "select * from tracks")
-spotify_tracks <- dbGetQuery(con, "select * from spotify_tracks") %>%
+playlist <- readRDS("output/playlist.RData")
+interprets <- readRDS("output/interprets.RData")
+tracks <- readRDS("output/tracks.RData")
+spotify_tracks <- readRDS("output/spotify_tracks.RData") %>%
     select(-interpret_id)
-wikipedia_interprets <- dbGetQuery(con, "select * from wikipedia_interprets") %>%
+wikipedia_interprets <- readRDS("output/wikipedia_interprets.RData") %>%
     rename(wiki_interpret = interpret)
 
 left_join(playlist, interprets, by = "interpret_id") %>% 
@@ -37,7 +34,7 @@ sample_data %>%
     mutate(song = gsub("´", "'", song)) %>%
     unique -> sample_data_min
 
-spotify_interprets <- dbGetQuery(con, "select * from spotify_interprets")
+spotify_interprets <- readRDS("output/spotify_interprets.RData")
 
 spotify_interprets %>%
     mutate(genre_category = case_when(
