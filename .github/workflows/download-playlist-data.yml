@@ -34,11 +34,11 @@ jobs:
         run: Rscript 00_get_radio_data.R
 
       - name: Scrape data on new tracks and interprets from Spotify 
-        run: Rscript 00_get_spotify_data.R
         env: 
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
-
+        run: Rscript 00_get_spotify_data.R $SPOTIFY_CLIENT_ID $SPOTIFY_CLIENT_SECRET
+        
       - name: Commit and push
         run: |-
           git config user.name "Automated"

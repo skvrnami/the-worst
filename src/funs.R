@@ -60,10 +60,12 @@ find_most_similar <- function(df, track){
         slice(1)
 }
 
-find_track_on_spotify <- function(interpret, track, track_id, interpret_id){
+find_track_on_spotify <- function(interpret, track, track_id, interpret_id, 
+                                  authorization){
     result <- search_spotify(paste0(interpret, ": ", track), 
                              type = "track", 
-                             market = "cz")
+                             market = "cz", 
+                             authorization = authorization)
     if(nrow(result) > 0){
         find_most_similar(result, track) %>%
             mutate(spotify_artist_id = paste0(artists[[1]]$id, collapse = ";")) %>%
