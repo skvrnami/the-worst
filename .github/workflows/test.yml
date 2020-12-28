@@ -1,0 +1,38 @@
+name: Test env vars
+
+on:
+  workflow_dispatch
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: setup-r
+        uses: r-lib/actions/setup-r@v1
+        with:
+          r-version: '4.0.2'
+
+      - name: Install libcurl
+        run: sudo apt-get install libcurl4-openssl-dev
+
+      - name: Cache packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.local/share/renv
+          key: ${{ runner.os }}-renv-${{ hashFiles('**/renv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-renv-
+      
+      - name: Install Package Dependencies
+        run: |-
+          Rscript -e "install.packages('renv'); renv::restore(confirm = FALSE)"
+      
+      - name: Test env vars
+        run: Rscript -e "print(Sys.getenv('SPOTIFY_CLIENT_ID')"
+        env: 
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+
+      
