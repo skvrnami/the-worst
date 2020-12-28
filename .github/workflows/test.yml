@@ -1,9 +1,10 @@
-name: Download playlist data
+name: Test env vars
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '15 3 * * 1'
+  push:
+    branches:
+      - '*'
 
 jobs:
   run_script:
@@ -26,23 +27,15 @@ jobs:
           key: ${{ runner.os }}-renv-${{ hashFiles('**/renv.lock') }}
           restore-keys: |
             ${{ runner.os }}-renv-
+      
       - name: Install Package Dependencies
         run: |-
           Rscript -e "install.packages('renv'); renv::restore(confirm = FALSE)"
       
-      - name: Scrape playlist data from the Czech Radio's API
-        run: Rscript 00_get_radio_data.R
-
-      - name: Scrape data on new tracks and interprets from Spotify 
+      - name: Test env vars
+        run: Rscript -e "print(Sys.getenv('SPOTIFY_CLIENT_ID')"
         env: 
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
-        run: Rscript 00_get_spotify_data.R $SPOTIFY_CLIENT_ID $SPOTIFY_CLIENT_SECRET
-        
-      - name: Commit and push
-        run: |-
-          git config user.name "Automated"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git commit -m "Add data from last week" || exit 0
-          git push
+
+      
