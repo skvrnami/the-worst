@@ -16,13 +16,6 @@
       "Repository": "CRAN",
       "Hash": "8f9ce74c6417d61f0782cbae5fd2b7b0"
     },
-    "DBI": {
-      "Package": "DBI",
-      "Version": "1.1.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "4744be45519d675af66c28478720fce5"
-    },
     "MASS": {
       "Package": "MASS",
       "Version": "7.3-51.6",
@@ -50,13 +43,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "e031418365a7f7a766181ab5a41a5716"
-    },
-    "RSQLite": {
-      "Package": "RSQLite",
-      "Version": "2.2.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "2e813101e637bfd423f763d20350ed3d"
     },
     "Rcpp": {
       "Package": "Rcpp",
@@ -92,27 +78,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "50c838a310445e954bc13f26f26a6ecf"
-    },
-    "bit": {
-      "Package": "bit",
-      "Version": "1.1-15.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "eb6c52d8cc44463085a4cde1c63df163"
-    },
-    "bit64": {
-      "Package": "bit64",
-      "Version": "0.9-7.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "41dbb29d3c0d62c53b03fef11cdb0f09"
-    },
-    "blob": {
-      "Package": "blob",
-      "Version": "1.2.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "9addc7e2c5954eca5719928131fed98c"
     },
     "brio": {
       "Package": "brio",
@@ -324,13 +289,6 @@
       "Repository": "CRAN",
       "Hash": "41287f1ac7d28a92f0a286ed507928d3"
     },
-    "memoise": {
-      "Package": "memoise",
-      "Version": "1.1.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "58baa74e4603fcfb9a94401c58c8f9b1"
-    },
     "mgcv": {
       "Package": "mgcv",
       "Version": "1.8-31",
@@ -393,13 +351,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "b6b150cd4709e0c0c9b5d51ac4376282"
-    },
-    "plogr": {
-      "Package": "plogr",
-      "Version": "0.2.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "09eb987710984fc2905c7129c7d85e65"
     },
     "praise": {
       "Package": "praise",
@@ -517,6 +468,13 @@
       "RemoteRef": "master",
       "RemoteSha": "1bc55d522ddaf28f4a850862a8540629a2b2a9ee",
       "Hash": "0578f802e00ed934db7a98408f61e8eb"
+    },
+    "stringdist": {
+      "Package": "stringdist",
+      "Version": "0.9.6.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "1ab14e88df14b856dd4d2e34a80c0ba6"
     },
     "stringi": {
       "Package": "stringi",
