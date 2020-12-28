@@ -92,7 +92,7 @@ remove_text_in_bracket <- function(x){
 }
 
 remove_text_after_feat <- function(x){
-    stringr::str_remove(x, "\\(*feat.\\s[A-Ža-ž_0-9& ]+\\)*")
+    stringr::str_remove(x, "\\(*f[ea]*t.\\s[A-Ža-ž_0-9&, ]+\\)*")
 }
 
 
