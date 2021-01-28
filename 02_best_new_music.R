@@ -1,9 +1,9 @@
 library(dplyr)
 library(spotifyr)
 
-args <- commandArgs(trailingOnly=TRUE)
+# args <- commandArgs(trailingOnly=TRUE)
 
-STATION_ID <- args[1]
+STATION_ID <- "radiowave" #args[1]
 
 STATIONS <- c(
     "radiowave"="Wave", 
